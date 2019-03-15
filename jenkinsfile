@@ -1,30 +1,34 @@
 node {
         stage('build'){
         echo "building"
-  
+		checkout scm
     }
-}
 
-node {
 stage('Deploy approval'){
     input "Deploy to prod?"
-}
+        withEnv(['PATH+EXTRA=/usr/sbin:/usr/bin:/sbin:/bin']) {  
+         sh '''
+		ls -ltr	
+	'''
 }
 
-node {
+
+}
+
     stage('deploy to prod'){
         echo "deploying"
+        
         withEnv(['PATH+EXTRA=/usr/sbin:/usr/bin:/sbin:/bin']) {  
-          sh '''
-            export OLD_TASK_ID=$(/usr/local/aws/bin/aws ecs list-tasks --cluster ${ecsClusterName} --desired-status RUNNING --family ${nameTaskDefinition} | egrep "task/" | sed -E "s/.*task\/(.*)\"/\1/")
-            /usr/local/aws/bin/aws ecs stop-task --cluster ${ecsClusterName} --task ${OLD_TASK_ID}
+         sh '''
+            /usr/local/aws/bin/aws ecs list-tasks --cluster ${ecsClusterName} --desired-status RUNNING --family ${nameTaskDefinition} | egrep 'task/'
+            cd /tmp/
+          ./test.sh
+          echo $OLD_TASK_ID 
             /usr/local/aws/bin/aws ecs update-service --cluster ${ecsClusterName} --service ${nameService} --task-definition ${nameTaskDefinition}:${version} --desired-count 1 --force-new-deployment
-
           '''
+///usr/local/aws/bin/aws ecs stop-task --cluster ${ecsClusterName} --task $OLD_TASK_ID
         }
-
 
     }
 
-    
  }
