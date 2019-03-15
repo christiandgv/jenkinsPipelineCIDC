@@ -20,11 +20,10 @@ stage('Deploy approval'){
         
         withEnv(['PATH+EXTRA=/usr/sbin:/usr/bin:/sbin:/bin']) {  
          sh '''
-            /usr/local/aws/bin/aws ecs list-tasks --cluster ${ecsClusterName} --desired-status RUNNING --family ${nameTaskDefinition} | egrep 'task/'
-            cd /tmp/
-          ./test.sh
-          echo $OLD_TASK_ID 
-            /usr/local/aws/bin/aws ecs update-service --cluster ${ecsClusterName} --service ${nameService} --task-definition ${nameTaskDefinition}:${version} --desired-count 1 --force-new-deployment
+           /usr/local/aws/bin/aws ecs list-tasks --cluster ${ecsClusterName} --desired-status RUNNING --family ${nameTaskDefinition} | egrep 'task/'
+           ./script_deploy.sh
+           echo $OLD_TASK_ID 
+           /usr/local/aws/bin/aws ecs update-service --cluster ${ecsClusterName} --service ${nameService} --task-definition ${nameTaskDefinition}:${version} --desired-count 1 --force-new-deployment
           '''
 ///usr/local/aws/bin/aws ecs stop-task --cluster ${ecsClusterName} --task $OLD_TASK_ID
         }
